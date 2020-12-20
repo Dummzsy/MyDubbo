@@ -193,40 +193,34 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
-     * generate method content
+     * 生成方法内容,@Adaptive自适应代码生成
      */
     private String generateMethodContent(Method method) {
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
         if (adaptiveAnnotation == null) {
             return generateUnsupported(method);
-        } else {
-            int urlTypeIndex = getUrlTypeIndex(method);
-
-            // found parameter in URL type
-            if (urlTypeIndex != -1) {
-                // Null Point check
-                code.append(generateUrlNullCheck(urlTypeIndex));
-            } else {
-                // did not find parameter in URL type
-                code.append(generateUrlAssignmentIndirectly(method));
-            }
-
-            String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
-
-            boolean hasInvocation = hasInvocationArgument(method);
-
-            code.append(generateInvocationArgumentNullCheck(method));
-
-            code.append(generateExtNameAssignment(value, hasInvocation));
-            // check extName == null?
-            code.append(generateExtNameNullCheck(value));
-
-            code.append(generateExtensionAssignment());
-
-            // return statement
-            code.append(generateReturnAndInvocation(method));
         }
+        int urlTypeIndex = getUrlTypeIndex(method);
+        // found parameter in URL type
+        if (urlTypeIndex != -1) {
+            // Null Point check
+            code.append(generateUrlNullCheck(urlTypeIndex));
+        } else {
+            // did not find parameter in URL type
+            code.append(generateUrlAssignmentIndirectly(method));
+        }
+
+        boolean hasInvocation = hasInvocationArgument(method);
+        code.append(generateInvocationArgumentNullCheck(method));
+
+        String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
+        code.append(generateExtNameAssignment(value, hasInvocation));
+        code.append(generateExtNameNullCheck(value));
+
+        code.append(generateExtensionAssignment());
+        // return statement
+        code.append(generateReturnAndInvocation(method));
 
         return code.toString();
     }
