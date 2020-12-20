@@ -305,7 +305,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         appendParameters(map, this);
         Map<String, Object> attributes = null;
         if (CollectionUtils.isNotEmpty(methods)) {
-            attributes = new HashMap<String, Object>();
+            attributes = new HashMap<>();
             for (MethodConfig methodConfig : methods) {
                 appendParameters(map, methodConfig, methodConfig.getName());
                 String retryKey = methodConfig.getName() + ".retry";
@@ -348,7 +348,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         return new ConsumerModel(serviceKey, serviceInterface, ref, methods, attributes);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
+
     private T createProxy(Map<String, String> map) {
         if (shouldJvmRefer(map)) {
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
@@ -358,73 +358,31 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             }
         } else {
             urls.clear(); // reference retry init will add url to urls, lead to OOM
-            if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
-                String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
-                if (us != null && us.length > 0) {
-                    for (String u : us) {
-                        URL url = URL.valueOf(u);
-                        if (StringUtils.isEmpty(url.getPath())) {
-                            url = url.setPath(interfaceName);
-                        }
-                        if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
-                            urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
-                        } else {
-                            urls.add(ClusterUtils.mergeUrl(url, map));
-                        }
-                    }
-                }
-            } else { // assemble URL from register center's configuration
-                // if protocols not injvm checkRegistry
-                if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())){
-                    checkRegistry();
-                    List<URL> us = loadRegistries(false);
-                    if (CollectionUtils.isNotEmpty(us)) {
-                        for (URL u : us) {
-                            URL monitorUrl = loadMonitor(u);
-                            if (monitorUrl != null) {
-                                map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
-                            }
-                            urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
-                        }
-                    }
-                    if (urls.isEmpty()) {
-                        throw new IllegalStateException("No such any registry to reference " + interfaceName + " on the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
-                    }
-                }
+            if (url != null && url.length() > 0) {
+                // user specified URL, could be peer-to-peer address, or register center's address.
+                addUrlsIfP2PMode(map);
+            } else if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
+                // assemble URL from register center's configuration,if protocols not injvm checkRegistry
+                adUrlsIfRemote(map);
             }
 
             if (urls.size() == 1) {
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
-                List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
-                URL registryURL = null;
-                for (URL url : urls) {
-                    invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
-                    if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
-                        registryURL = url; // use last registry url
-                    }
-                }
-                if (registryURL != null) { // registry url is available
-                    // use RegistryAwareCluster only when register's CLUSTER is available
-                    URL u = registryURL.addParameter(CLUSTER_KEY, RegistryAwareCluster.NAME);
-                    // The invoker wrap relation would be: RegistryAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, will execute route) -> Invoker
-                    invoker = CLUSTER.join(new StaticDirectory(u, invokers));
-                } else { // not a registry url, must be direct invoke.
-                    invoker = CLUSTER.join(new StaticDirectory(invokers));
-                }
+                invoker = warpAsClusterInvoker();
             }
         }
 
         if (shouldCheck() && !invoker.isAvailable()) {
-            throw new IllegalStateException("Failed to check the status of the service " + interfaceName + ". No provider available for the service " + (group == null ? "" : group + "/") + interfaceName + (version == null ? "" : ":" + version) + " from the url " + invoker.getUrl() + " to the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion());
+            throw new IllegalStateException("Failed to check the status of the service " + interfaceName
+                    + ". No provider available for the service " + (group == null ? "" : group + "/")
+                    + interfaceName + (version == null ? "" : ":" + version) + " from the url " + invoker.getUrl()
+                    + " to the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion());
         }
         if (logger.isInfoEnabled()) {
             logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
         }
-        /**
-         * @since 2.7.0
-         * ServiceData Store
-         */
+        // @since 2.7.0 ServiceData Store
         MetadataReportService metadataReportService = null;
         if ((metadataReportService = getMetadataReportService()) != null) {
             URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
@@ -432,6 +390,71 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         }
         // create service proxy
         return (T) PROXY_FACTORY.getProxy(invoker);
+    }
+
+    /**
+     * 点对点模式urls参数保存
+     */
+    private void addUrlsIfP2PMode(Map<String, String> map) {
+        String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
+        if (us != null && us.length > 0) {
+            for (String u : us) {
+                URL url = URL.valueOf(u);
+                if (StringUtils.isEmpty(url.getPath())) {
+                    url = url.setPath(interfaceName);
+                }
+                if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
+                    urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                } else {
+                    urls.add(ClusterUtils.mergeUrl(url, map));
+                }
+            }
+        }
+    }
+
+    /**
+     * 从注册中心获取服务urls参数保存
+     */
+    private void adUrlsIfRemote(Map<String, String> map) {
+        checkRegistry();
+        List<URL> us = loadRegistries(false);
+        if (CollectionUtils.isNotEmpty(us)) {
+            for (URL u : us) {
+                URL monitorUrl = loadMonitor(u);
+                if (monitorUrl != null) {
+                    map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
+                }
+                urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+            }
+        }
+        if (urls.isEmpty()) {
+            throw new IllegalStateException("No such any registry to reference " + interfaceName + " on the consumer "
+                    + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion()
+                    + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
+        }
+    }
+
+    /**
+     * 当存在多个invoker的时候，包装成clusterInvoker对象
+     */
+    private Invoker<?> warpAsClusterInvoker(){
+        List<Invoker<?>> invokers = new ArrayList<>();
+        URL registryURL = null;
+        for (URL url : urls) {
+            invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
+            if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
+                registryURL = url; // use last registry url
+            }
+        }
+        if (registryURL != null) { // registry url is available
+            // use RegistryAwareCluster only when register's CLUSTER is available
+            URL u = registryURL.addParameter(CLUSTER_KEY, RegistryAwareCluster.NAME);
+            // The invoker wrap relation would be: RegistryAwareClusterInvoker(StaticDirectory)
+            // -> FailoverClusterInvoker(RegistryDirectory, will execute route) -> Invoker
+            return CLUSTER.join(new StaticDirectory(u, invokers));
+        } else { // not a registry url, must be direct invoke.
+            return CLUSTER.join(new StaticDirectory(invokers));
+        }
     }
 
     /**
