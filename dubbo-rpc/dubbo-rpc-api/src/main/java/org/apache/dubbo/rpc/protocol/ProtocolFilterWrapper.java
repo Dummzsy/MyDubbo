@@ -51,6 +51,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
 
     private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
+        //初始化last变量
         Invoker<T> last = invoker;
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
 
@@ -58,6 +59,7 @@ public class ProtocolFilterWrapper implements Protocol {
             for (int i = filters.size() - 1; i >= 0; i--) {
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;
+                //赋值给last变量
                 last = new Invoker<T>() {
 
                     @Override

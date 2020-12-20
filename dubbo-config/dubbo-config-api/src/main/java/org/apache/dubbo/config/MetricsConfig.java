@@ -27,6 +27,7 @@ public class MetricsConfig extends AbstractConfig {
     private static final long serialVersionUID = -9089919311611546383L;
 
     private String port;
+
     private String protocol;
 
     public MetricsConfig() {

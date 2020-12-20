@@ -29,6 +29,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.MethodUtils;
 import org.apache.dubbo.common.utils.ReflectUtils;
 import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.config.context.ConfigConfigurationAdapter;
 import org.apache.dubbo.config.support.Parameter;
 import org.apache.dubbo.rpc.model.ConsumerMethodModel;
@@ -54,6 +55,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.REMOVE_VALUE_PRE
 public abstract class AbstractConfig implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractConfig.class);
+
     private static final long serialVersionUID = 4267533505537413570L;
 
     /**
@@ -99,7 +101,7 @@ public abstract class AbstractConfig implements Serializable {
     /**
      * The legacy properties container
      */
-    private static final Map<String, String> LEGACY_PROPERTIES = new HashMap<String, String>();
+    private static final Map<String, String> LEGACY_PROPERTIES = new HashMap<>();
 
     /**
      * The suffix container
@@ -124,18 +126,8 @@ public abstract class AbstractConfig implements Serializable {
      * The config id
      */
     protected String id;
-    protected String prefix;
 
-    private static String convertLegacyValue(String key, String value) {
-        if (value != null && value.length() > 0) {
-            if ("dubbo.service.max.retry.providers".equals(key)) {
-                return String.valueOf(Integer.parseInt(value) - 1);
-            } else if ("dubbo.service.allow.no.provider".equals(key)) {
-                return String.valueOf(!Boolean.parseBoolean(value));
-            }
-        }
-        return value;
-    }
+    protected String prefix;
 
     private static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();

@@ -111,8 +111,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
             logger.error(t.getMessage(), t);
         }
         try {
-            if (url.hasParameter(THREADS_KEY)
-                    && executor instanceof ThreadPoolExecutor && !executor.isShutdown()) {
+            if (url.hasParameter(THREADS_KEY) && executor instanceof ThreadPoolExecutor && !executor.isShutdown()) {
                 ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
                 int threads = url.getParameter(THREADS_KEY, 0);
                 int max = threadPoolExecutor.getMaximumPoolSize();

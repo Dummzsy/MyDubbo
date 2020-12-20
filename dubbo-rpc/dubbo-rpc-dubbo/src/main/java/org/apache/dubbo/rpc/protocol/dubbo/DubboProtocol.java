@@ -93,7 +93,9 @@ public class DubboProtocol extends AbstractProtocol {
     public static final String NAME = "dubbo";
 
     public static final int DEFAULT_PORT = 20880;
+
     private static final String IS_CALLBACK_SERVICE_INVOKE = "_isCallBackServiceInvoke";
+
     private static DubboProtocol INSTANCE;
 
     /**
@@ -281,7 +283,6 @@ public class DubboProtocol extends AbstractProtocol {
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
-
         // export service.
         String key = serviceKey(url);
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
@@ -297,7 +298,6 @@ public class DubboProtocol extends AbstractProtocol {
                     logger.warn(new IllegalStateException("consumer [" + url.getParameter(INTERFACE_KEY) +
                             "], has set stubproxy support event ,but no stub methods founded."));
                 }
-
             } else {
                 stubServiceMethodsMap.put(url.getServiceKey(), stubServiceMethods);
             }
@@ -305,7 +305,6 @@ public class DubboProtocol extends AbstractProtocol {
 
         openServer(url);
         optimizeSerialization(url);
-
         return exporter;
     }
 

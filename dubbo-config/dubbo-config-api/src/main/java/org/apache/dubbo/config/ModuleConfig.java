@@ -30,7 +30,7 @@ import static org.apache.dubbo.config.Constants.OWNER;
 /**
  * The module info
  *
- * @export
+ * 对应着 <dubbo:module></dubbo:module>
  */
 public class ModuleConfig extends AbstractConfig {
 

@@ -284,8 +284,7 @@ public final class ClassGenerator {
     }
 
     public Class<?> toClass() {
-        return toClass(ClassUtils.getClassLoader(ClassGenerator.class),
-                getClass().getProtectionDomain());
+        return toClass(ClassUtils.getClassLoader(ClassGenerator.class), getClass().getProtectionDomain());
     }
 
     public Class<?> toClass(ClassLoader loader, ProtectionDomain pd) {

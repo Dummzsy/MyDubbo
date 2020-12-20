@@ -105,7 +105,7 @@ public class UrlUtils {
         String host = u.getHost();
         int port = u.getPort();
         String path = u.getPath();
-        Map<String, String> parameters = new HashMap<String, String>(u.getParameters());
+        Map<String, String> parameters = new HashMap<>(u.getParameters());
         if ((protocol == null || protocol.length() == 0) && defaultProtocol != null && defaultProtocol.length() > 0) {
             changed = true;
             protocol = defaultProtocol;

@@ -119,7 +119,8 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
     @SuppressWarnings({"unchecked", "deprecation"})
     public void afterPropertiesSet() throws Exception {
         if (getProvider() == null) {
-            Map<String, ProviderConfig> providerConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProviderConfig.class, false, false);
+            Map<String, ProviderConfig> providerConfigMap = applicationContext == null ? null :
+                    BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProviderConfig.class, false, false);
             if (providerConfigMap != null && providerConfigMap.size() > 0) {
                 Map<String, ProtocolConfig> protocolConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProtocolConfig.class, false, false);
                 if (CollectionUtils.isEmptyMap(protocolConfigMap)
@@ -149,9 +150,9 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                 }
             }
         }
-        if (getApplication() == null
-                && (getProvider() == null || getProvider().getApplication() == null)) {
-            Map<String, ApplicationConfig> applicationConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ApplicationConfig.class, false, false);
+        if (getApplication() == null && (getProvider() == null || getProvider().getApplication() == null)) {
+            Map<String, ApplicationConfig> applicationConfigMap = applicationContext == null ? null :
+                    BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ApplicationConfig.class, false, false);
             if (applicationConfigMap != null && applicationConfigMap.size() > 0) {
                 ApplicationConfig applicationConfig = null;
                 for (ApplicationConfig config : applicationConfigMap.values()) {
@@ -220,7 +221,8 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
         if (getMetadataReportConfig() == null) {
-            Map<String, MetadataReportConfig> metadataReportConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, MetadataReportConfig.class, false, false);
+            Map<String, MetadataReportConfig> metadataReportConfigMap = applicationContext == null ? null :
+                    BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, MetadataReportConfig.class, false, false);
             if (metadataReportConfigMap != null && metadataReportConfigMap.size() == 1) {
                 super.setMetadataReportConfig(metadataReportConfigMap.values().iterator().next());
             } else if (metadataReportConfigMap != null && metadataReportConfigMap.size() > 1) {
@@ -229,7 +231,8 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         }
 
         if (getConfigCenter() == null) {
-            Map<String, ConfigCenterConfig> configenterMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ConfigCenterConfig.class, false, false);
+            Map<String, ConfigCenterConfig> configenterMap = applicationContext == null ? null :
+                    BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ConfigCenterConfig.class, false, false);
             if (configenterMap != null && configenterMap.size() == 1) {
                 super.setConfigCenter(configenterMap.values().iterator().next());
             } else if (configenterMap != null && configenterMap.size() > 1) {
@@ -281,9 +284,11 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
 
         if (CollectionUtils.isEmpty(getProtocols())
                 && (getProvider() == null || CollectionUtils.isEmpty(getProvider().getProtocols()))) {
-            Map<String, ProtocolConfig> protocolConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProtocolConfig.class, false, false);
+            Map<String, ProtocolConfig> protocolConfigMap = applicationContext == null ? null :
+                    //beansOfTypeIncludingAncestors 获取父容器中的对象和当前容器的对象
+                    BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProtocolConfig.class, false, false);
             if (protocolConfigMap != null && protocolConfigMap.size() > 0) {
-                List<ProtocolConfig> protocolConfigs = new ArrayList<ProtocolConfig>();
+                List<ProtocolConfig> protocolConfigs = new ArrayList<>();
                 if (StringUtils.isNotEmpty(getProtocolIds())) {
                     Arrays.stream(COMMA_SPLIT_PATTERN.split(getProtocolIds()))
                             .forEach(id -> {
@@ -313,6 +318,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                 setPath(beanName);
             }
         }
+        //容器不支持Listener则直接导出，否则在Listener监听器里面执行
         if (!supportedApplicationListener) {
             export();
         }

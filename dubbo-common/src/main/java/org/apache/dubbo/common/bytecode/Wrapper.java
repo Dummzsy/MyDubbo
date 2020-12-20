@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.common.bytecode;
 
+import com.sun.tools.internal.ws.processor.model.jaxb.RpcLitMember;
 import org.apache.dubbo.common.utils.ClassUtils;
 import org.apache.dubbo.common.utils.ReflectUtils;
 

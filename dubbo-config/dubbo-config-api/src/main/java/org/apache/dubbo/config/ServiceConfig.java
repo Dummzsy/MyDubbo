@@ -142,7 +142,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     /**
      * The exported services
      */
-    private final List<Exporter<?>> exporters = new ArrayList<Exporter<?>>();
+    private final List<Exporter<?>> exporters = new ArrayList<>();
 
     /**
      * The interface name of the exported service
@@ -207,7 +207,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (CollectionUtils.isEmpty(providers)) {
             return null;
         }
-        List<ProtocolConfig> protocols = new ArrayList<ProtocolConfig>(providers.size());
+        List<ProtocolConfig> protocols = new ArrayList<>(providers.size());
         for (ProviderConfig provider : providers) {
             protocols.add(convertProviderToProtocol(provider));
         }
@@ -561,8 +561,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
-        if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
-                .hasExtension(url.getProtocol())) {
+        if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class).hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                     .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
@@ -637,8 +636,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 .setHost(LOCALHOST_VALUE)
                 .setPort(0)
                 .build();
-        Exporter<?> exporter = protocol.export(
-                PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
+        Exporter<?> exporter = protocol.export(PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
         exporters.add(exporter);
         logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
     }

@@ -134,6 +134,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     /**
      * The url for peer-to-peer invocation
+     * 直连
      */
     private String url;
 
@@ -325,7 +326,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
         map.put(REGISTER_IP_KEY, hostToRegistry);
-
+        // ************ 动态代理创建 **************
         ref = createProxy(map);
 
         String serviceKey = URL.buildKey(interfaceName, group, version);

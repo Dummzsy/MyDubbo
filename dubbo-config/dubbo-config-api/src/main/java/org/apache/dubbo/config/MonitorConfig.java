@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * MonitorConfig
  *
- * @export
+ * <dubbo:monitor></dubbo:monitor>
  */
 public class MonitorConfig extends AbstractConfig {
 
